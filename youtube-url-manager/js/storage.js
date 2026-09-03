@@ -275,7 +275,8 @@ const Storage = (() => {
 
   function importJSON(jsonString, replaceAll = false) {
     try {
-      const imported = JSON.parse(jsonString);
+      // jsonString может быть строкой или уже объектом
+      const imported = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
       console.log('Import: parsed data', imported);
       
       if (!imported.version && !imported.links && !imported.groups) {
@@ -285,6 +286,7 @@ const Storage = (() => {
       let data;
       let groupsAdded = 0;
       let linksAdded = 0;
+      let settingsUpdated = false;
       
       if (replaceAll) {
         // Полная замена — восстановление из бэкапа
@@ -299,12 +301,14 @@ const Storage = (() => {
         };
         groupsAdded = data.groups.length;
         linksAdded = data.links.length;
+        settingsUpdated = true;
         console.log('Import (replace):', linksAdded, 'links,', groupsAdded, 'groups');
       } else {
         // Мерджим — добавляем только отсутствующие
         data = _load();
         if (imported.settings) {
           Object.assign(data.settings, imported.settings);
+          settingsUpdated = true;
         }
         if (Array.isArray(imported.groups)) {
           const existingIds = new Set(data.groups.map(g => g.id));
@@ -331,7 +335,7 @@ const Storage = (() => {
       const saved = _save(data);
       console.log('Import: save result', saved, 'Total links:', data.links.length);
       
-      return { success: true, groupsAdded, linksAdded, replaced: replaceAll };
+      return { success: true, groupsAdded, linksAdded, replaced: replaceAll, settingsUpdated };
     } catch (e) {
       console.error('Import error:', e);
       return { success: false, error: e.message };
