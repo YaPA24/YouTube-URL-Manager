@@ -1275,34 +1275,170 @@ const App = (() => {
 
   /* ==================== IMPORT ==================== */
 
+  // Хранилище логов импорта
+  let importLogs = [];
+
+  function _logImport(msg, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const consoleMsg = `[IMPORT ${timestamp}] ${msg}`;
+    
+    // Лог в консоль
+    if (type === 'error') console.error(consoleMsg);
+    else console.log(consoleMsg);
+
+    // Лог в массив
+    importLogs.push(consoleMsg);
+    if (importLogs.length > 100) importLogs.shift();
+
+    // Лог на экран (если есть контейнер)
+    const logContainer = document.getElementById('import-log-content');
+    if (logContainer) {
+      const p = document.createElement('div');
+      p.textContent = `> ${msg}`;
+      p.style.color = type === 'error' ? '#ff6b6b' : (type === 'warn' ? '#ffd93d' : '#6bff6b');
+      p.style.fontFamily = 'monospace';
+      p.style.fontSize = '12px';
+      p.style.marginBottom = '4px';
+      logContainer.appendChild(p);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+  }
+
   function _handleFileImport(e) {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Очищаем логи
+    importLogs = [];
+    
+    // Показываем модальное окно с логами
+    const modalId = 'import-progress-modal';
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal active';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 500px;">
+        <header>
+          <h3>Импорт данных</h3>
+          <button class="btn-icon close-modal" onclick="document.getElementById('${modalId}').remove()">×</button>
+        </header>
+        <div style="padding: 20px;">
+          <p>Выполняется импорт...</p>
+          <div id="import-log-content" style="
+            background: #1e1e1e; 
+            padding: 10px; 
+            height: 300px; 
+            overflow-y: auto; 
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #333;
+          "></div>
+          <div style="margin-top: 15px; text-align: right;">
+            <button class="btn btn-secondary" onclick="App._downloadInternalLog()">Скачать полный лог</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    _logImport('Чтение файла...');
+    
     const reader = new FileReader();
     reader.onload = function(ev) {
-      const c = ev.target.result;
-      if (importMode === 'json-merge') {
-        const r = Storage.importJSON(c, false);
-        if (r.success) {
-          _toast('JSON: +' + r.linksAdded + ' ссылок, +' + r.groupsAdded + ' групп', 'success');
-          _renderSidebar();
-          _renderTable();
-        } else _toast('Ошибка: ' + r.error, 'error');
-      } else if (importMode === 'json-replace') {
-        const r = Storage.importJSON(c, true);
-        if (r.success) {
-          _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
-          _renderSidebar();
-          _renderTable();
-        } else _toast('Ошибка: ' + r.error, 'error');
-      } else if (importMode === 'bookmarks') {
-        const r = Storage.importBookmarks(c);
-        if (r.success) {
-          _toast('Закладки: ' + r.found + ' найдено, ' + r.added + ' добавлено', 'success');
-          _renderSidebar();
-          _renderTable();
-        } else _toast('Ошибка: ' + r.error, 'error');
+      try {
+        const c = ev.target.result;
+        _logImport(`Файл прочитан (${(c.length / 1024).toFixed(2)} KB)`);
+        
+        _logImport('Парсинг JSON...');
+        let data;
+        try {
+          data = JSON.parse(c);
+        } catch (parseErr) {
+          throw new Error(`Ошибка парсинга JSON: ${parseErr.message}`);
+        }
+
+        _logImport('JSON успешно распарсен.');
+
+        // Валидация структуры
+        if (!data) throw new Error('Пустой файл данных');
+        if (!Array.isArray(data.links)) {
+          _logImport('Предупреждение: поле "links" не найдено или не является массивом.', 'warn');
+          data.links = [];
+        }
+        if (!data.settings || typeof data.settings !== 'object') {
+          _logImport('Предупреждение: поле "settings" не найдено.', 'warn');
+          data.settings = {};
+        }
+        if (!Array.isArray(data.groups)) {
+          data.groups = [];
+        }
+
+        _logImport(`Найдено ссылок: ${data.links.length}`);
+        _logImport(`Найдено групп: ${data.groups.length}`);
+        if (data.settings.youtubeApiKey) {
+          _logImport('Найден API ключ YouTube.');
+        }
+
+        // Импорт
+        _logImport('Запись данных в хранилище...');
+        
+        if (importMode === 'json-merge') {
+          const r = Storage.importJSON(data, false);
+          if (r.success) {
+            _logImport(`Успешно импортировано: ${r.linksAdded} новых ссылок.`);
+            if (r.groupsAdded) _logImport(`Добавлено групп: ${r.groupsAdded}.`);
+            if (r.settingsUpdated) _logImport('Настройки обновлены.');
+            _logImport('Импорт завершен успешно! Перезагрузка интерфейса...');
+            _toast('JSON: +' + r.linksAdded + ' ссылок, +' + r.groupsAdded + ' групп', 'success');
+            _renderSidebar();
+            _renderTable();
+          } else {
+            _logImport(`КРИТИЧЕСКАЯ ОШИБКА: ${r.error}`, 'error');
+            _toast('Ошибка: ' + r.error, 'error');
+          }
+        } else if (importMode === 'json-replace') {
+          const r = Storage.importJSON(data, true);
+          if (r.success) {
+            _logImport(`Восстановлено: ${r.linksAdded} ссылок, ${r.groupsAdded} групп.`);
+            if (r.settingsUpdated) _logImport('Настройки восстановлены.');
+            _logImport('Восстановление завершено! Перезагрузка интерфейса...');
+            _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
+            _renderSidebar();
+            _renderTable();
+          } else {
+            _logImport(`КРИТИЧЕСКАЯ ОШИБКА: ${r.error}`, 'error');
+            _toast('Ошибка: ' + r.error, 'error');
+          }
+        } else if (importMode === 'bookmarks') {
+          const r = Storage.importBookmarks(c);
+          if (r.success) {
+            _logImport(`Закладки: ${r.found} найдено, ${r.added} добавлено.`);
+            _toast('Закладки: ' + r.found + ' найдено, ' + r.added + ' добавлено', 'success');
+            _renderSidebar();
+            _renderTable();
+          } else {
+            _logImport(`КРИТИЧЕСКАЯ ОШИБКА: ${r.error}`, 'error');
+            _toast('Ошибка: ' + r.error, 'error');
+          }
+        }
+
+        // Закрываем модалку через 2 сек
+        setTimeout(() => {
+          const m = document.getElementById(modalId);
+          if (m) m.remove();
+        }, 2000);
+
+      } catch (err) {
+        _logImport(`КРИТИЧЕСКАЯ ОШИБКА: ${err.message}`, 'error');
+        alert(`Ошибка импорта: ${err.message}\nПроверьте лог (кнопка "Скачать лог" внизу).`);
       }
+    };
+    reader.onerror = function() {
+      _logImport('Ошибка чтения файла', 'error');
+      alert('Ошибка чтения файла');
     };
     reader.readAsText(file);
     e.target.value = ''; importMode = '';
@@ -1347,7 +1483,25 @@ const App = (() => {
     document.removeChild(a);
   }
 
+  // Публичный метод для скачивания логов импорта
+  function _downloadInternalLog() {
+    if (!importLogs || importLogs.length === 0) {
+      alert('Лог пуст');
+      return;
+    }
+    const content = importLogs.join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `import-log-${new Date().toISOString().slice(0,19)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   /* ==================== BOOT ==================== */
   document.addEventListener('DOMContentLoaded', init);
-  return { init };
+  return { init, _downloadInternalLog };
 })();
