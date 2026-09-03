@@ -276,6 +276,8 @@ const Storage = (() => {
   function importJSON(jsonString, replaceAll = false) {
     try {
       const imported = JSON.parse(jsonString);
+      console.log('Import: parsed data', imported);
+      
       if (!imported.version && !imported.links && !imported.groups) {
         throw new Error('Invalid format');
       }
@@ -297,6 +299,7 @@ const Storage = (() => {
         };
         groupsAdded = data.groups.length;
         linksAdded = data.links.length;
+        console.log('Import (replace):', linksAdded, 'links,', groupsAdded, 'groups');
       } else {
         // Мерджим — добавляем только отсутствующие
         data = _load();
@@ -322,11 +325,15 @@ const Storage = (() => {
             }
           });
         }
+        console.log('Import (merge): +', linksAdded, 'links, +', groupsAdded, 'groups');
       }
       
-      _save(data);
+      const saved = _save(data);
+      console.log('Import: save result', saved, 'Total links:', data.links.length);
+      
       return { success: true, groupsAdded, linksAdded, replaced: replaceAll };
     } catch (e) {
+      console.error('Import error:', e);
       return { success: false, error: e.message };
     }
   }
