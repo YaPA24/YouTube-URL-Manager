@@ -1283,18 +1283,26 @@ const App = (() => {
       const c = ev.target.result;
       if (importMode === 'json-merge') {
         const r = Storage.importJSON(c, false);
-        if (r.success) _toast('JSON: +' + r.linksAdded + ' ссылок, +' + r.groupsAdded + ' групп', 'success');
-        else _toast('Ошибка: ' + r.error, 'error');
+        if (r.success) {
+          _toast('JSON: +' + r.linksAdded + ' ссылок, +' + r.groupsAdded + ' групп', 'success');
+          _renderSidebar();
+          _renderTable();
+        } else _toast('Ошибка: ' + r.error, 'error');
       } else if (importMode === 'json-replace') {
         const r = Storage.importJSON(c, true);
-        if (r.success) _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
-        else _toast('Ошибка: ' + r.error, 'error');
+        if (r.success) {
+          _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
+          _renderSidebar();
+          _renderTable();
+        } else _toast('Ошибка: ' + r.error, 'error');
       } else if (importMode === 'bookmarks') {
         const r = Storage.importBookmarks(c);
-        if (r.success) _toast('Закладки: ' + r.found + ' найдено, ' + r.added + ' добавлено', 'success');
-        else _toast('Ошибка: ' + r.error, 'error');
+        if (r.success) {
+          _toast('Закладки: ' + r.found + ' найдено, ' + r.added + ' добавлено', 'success');
+          _renderSidebar();
+          _renderTable();
+        } else _toast('Ошибка: ' + r.error, 'error');
       }
-      _renderTable();
     };
     reader.readAsText(file);
     e.target.value = ''; importMode = '';
