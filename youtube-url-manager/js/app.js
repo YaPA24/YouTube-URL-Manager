@@ -92,7 +92,14 @@ const App = (() => {
     document.querySelectorAll('#menuIo .tb-dropdown__item[data-export]').forEach(item => {
       item.addEventListener('click', () => { _closeAllMenus(); _handleExport(item.dataset.export); });
     });
-    document.getElementById('menuImportJson').addEventListener('click', () => { _closeAllMenus(); importMode = 'json'; document.getElementById('fileInput').click(); });
+    document.getElementById('menuImportJsonMerge').addEventListener('click', () => { _closeAllMenus(); importMode = 'json-merge'; document.getElementById('fileInput').click(); });
+    document.getElementById('menuImportJsonReplace').addEventListener('click', () => {
+      _closeAllMenus();
+      if (confirm('Внимание! Это заменит ВСЕ текущие данные данными из файла. Продолжить?')) {
+        importMode = 'json-replace';
+        document.getElementById('fileInput').click();
+      }
+    });
     document.getElementById('menuImportBookmarks').addEventListener('click', () => { _closeAllMenus(); importMode = 'bookmarks'; document.getElementById('fileInput').click(); });
     document.getElementById('fileInput').addEventListener('change', _handleFileImport);
   }
@@ -1155,9 +1162,13 @@ const App = (() => {
     const reader = new FileReader();
     reader.onload = function(ev) {
       const c = ev.target.result;
-      if (importMode === 'json') {
-        const r = Storage.importJSON(c);
+      if (importMode === 'json-merge') {
+        const r = Storage.importJSON(c, false);
         if (r.success) _toast('JSON: +' + r.linksAdded + ' ссылок, +' + r.groupsAdded + ' групп', 'success');
+        else _toast('Ошибка: ' + r.error, 'error');
+      } else if (importMode === 'json-replace') {
+        const r = Storage.importJSON(c, true);
+        if (r.success) _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
         else _toast('Ошибка: ' + r.error, 'error');
       } else if (importMode === 'bookmarks') {
         const r = Storage.importBookmarks(c);
