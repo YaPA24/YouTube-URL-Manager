@@ -48,17 +48,17 @@ const App = (() => {
   /* ==================== TOOLBAR MENUS ==================== */
 
   function _bindToolbarMenus() {
-    _dropdownToggle('menuManageBtn', 'menuManage');
     _dropdownToggle('menuFilterBtn', 'menuFilter');
     _dropdownToggle('menuIoBtn', 'menuIo');
+    _dropdownToggle('menuSortBtn', 'menuSort');
 
     document.addEventListener('click', e => {
       if (!e.target.closest('.tb-dropdown')) _closeAllMenus();
     });
 
     /* Управление */
-    document.getElementById('menuAddLink').addEventListener('click', () => { _closeAllMenus(); _showAddLinkModal(); });
-    document.getElementById('menuAddGroup').addEventListener('click', () => { _closeAllMenus(); _showGroupModal(); });
+    document.getElementById('menuAddLinkBtn').addEventListener('click', () => { _closeAllMenus(); _showAddLinkModal(); });
+    document.getElementById('menuAddGroupBtn').addEventListener('click', () => { _closeAllMenus(); _showGroupModal(); });
     document.getElementById('menuDeleteSelected').addEventListener('click', () => { _closeAllMenus(); _deleteSelected(); });
     document.getElementById('menuRefreshMeta').addEventListener('click', () => { _closeAllMenus(); _refreshAllMeta(); });
     document.getElementById('menuHistory').addEventListener('click', () => { _closeAllMenus(); _showHistoryModal(selectedLinkId); });
