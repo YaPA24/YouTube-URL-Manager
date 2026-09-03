@@ -1409,10 +1409,16 @@ const App = (() => {
             
             // Принудительно обновляем поле API ключа из localStorage
             const settings = JSON.parse(localStorage.getItem('yta_settings') || '{}');
-            const keyInput = document.getElementById('settings-youtube-api-key');
+            // Обновляем внутреннее состояние приложения
+            _settings.youtubeApiKey = settings.youtubeApiKey || '';
+            
+            // Обновляем поле в настройках, если оно открыто
+            const keyInput = document.getElementById('setApiKey');
             if (keyInput) {
               keyInput.value = settings.youtubeApiKey || '';
               _logImport('API ключ обновлен в поле настроек.');
+            } else {
+              _logImport('Поле настроек не найдено (модальное окно закрыто).');
             }
             
             _renderSidebar();
