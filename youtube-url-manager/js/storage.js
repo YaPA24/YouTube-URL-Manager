@@ -273,36 +273,59 @@ const Storage = (() => {
     return _load();
   }
 
-  function importJSON(jsonString) {
+  function importJSON(jsonString, replaceAll = false) {
     try {
       const imported = JSON.parse(jsonString);
       if (!imported.version && !imported.links && !imported.groups) {
         throw new Error('Invalid format');
       }
-      // Мерджим
-      const data = _load();
-      if (imported.settings) {
-        Object.assign(data.settings, imported.settings);
-      }
-      if (Array.isArray(imported.groups)) {
-        const existingIds = new Set(data.groups.map(g => g.id));
-        imported.groups.forEach(g => {
-          if (!existingIds.has(g.id)) {
-            data.groups.push(g);
-          }
-        });
-      }
-      if (Array.isArray(imported.links)) {
-        const existingIds = new Set(data.links.map(l => l.id));
-        imported.links.forEach(l => {
-          if (!existingIds.has(l.id)) {
+      
+      let data;
+      let groupsAdded = 0;
+      let linksAdded = 0;
+      
+      if (replaceAll) {
+        // Полная замена — восстановление из бэкапа
+        data = {
+          version: imported.version || 1,
+          settings: imported.settings || { youtubeApiKey: '' },
+          groups: Array.isArray(imported.groups) ? imported.groups : [],
+          links: Array.isArray(imported.links) ? imported.links.map(l => {
             if (!Array.isArray(l.history)) l.history = [];
-            data.links.push(l);
-          }
-        });
+            return l;
+          }) : []
+        };
+        groupsAdded = data.groups.length;
+        linksAdded = data.links.length;
+      } else {
+        // Мерджим — добавляем только отсутствующие
+        data = _load();
+        if (imported.settings) {
+          Object.assign(data.settings, imported.settings);
+        }
+        if (Array.isArray(imported.groups)) {
+          const existingIds = new Set(data.groups.map(g => g.id));
+          imported.groups.forEach(g => {
+            if (!existingIds.has(g.id)) {
+              data.groups.push(g);
+              groupsAdded++;
+            }
+          });
+        }
+        if (Array.isArray(imported.links)) {
+          const existingIds = new Set(data.links.map(l => l.id));
+          imported.links.forEach(l => {
+            if (!existingIds.has(l.id)) {
+              if (!Array.isArray(l.history)) l.history = [];
+              data.links.push(l);
+              linksAdded++;
+            }
+          });
+        }
       }
+      
       _save(data);
-      return { success: true, groupsAdded: imported.groups ? imported.groups.length : 0, linksAdded: imported.links ? imported.links.length : 0 };
+      return { success: true, groupsAdded, linksAdded, replaced: replaceAll };
     } catch (e) {
       return { success: false, error: e.message };
     }
