@@ -32,6 +32,7 @@ const App = (() => {
   /* ==================== INIT ==================== */
 
   function init() {
+    _bindSidebar();
     _bindToolbarMenus();
     _bindSearch();
     _bindTableSort();
@@ -41,8 +42,126 @@ const App = (() => {
     _bindDetailsPanel();
     _bindTableClickDeselect();
     _bindKeyboard();
+    _renderSidebar();
     _renderTable();
     _setStatus('Готово');
+  }
+
+  /* ==================== SIDEBAR ==================== */
+
+  function _bindSidebar() {
+    const toggleBtn = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const addGroupBtn = document.getElementById('sidebarAddGroup');
+
+    if (toggleBtn && sidebar) {
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        toggleBtn.title = sidebar.classList.contains('collapsed') ? 'Развернуть панель' : 'Свернуть панель';
+      });
+    }
+
+    if (addGroupBtn) {
+      addGroupBtn.addEventListener('click', () => {
+        _showGroupModal();
+      });
+    }
+  }
+
+  function _renderSidebar() {
+    const groupsList = document.getElementById('sidebarGroups');
+    if (!groupsList) return;
+
+    const groups = Storage.getGroups();
+    const links = Storage.getLinks();
+
+    // Обновляем счетчики статусов
+    const statusCounts = {
+      all: links.length,
+      queue: links.filter(l => l.status === 'queue').length,
+      later: links.filter(l => l.status === 'later').length,
+      watching: links.filter(l => l.status === 'watching').length,
+      watched: links.filter(l => l.status === 'watched').length,
+      archived: links.filter(l => l.status === 'archived').length
+    };
+
+    document.getElementById('countAll').textContent = statusCounts.all;
+    document.getElementById('countQueue').textContent = statusCounts.queue;
+    document.getElementById('countLater').textContent = statusCounts.later;
+    document.getElementById('countWatching').textContent = statusCounts.watching;
+    document.getElementById('countWatched').textContent = statusCounts.watched;
+    document.getElementById('countArchived').textContent = statusCounts.archived;
+
+    // Обработчики кликов на фильтры статусов
+    document.querySelectorAll('.nav-list[data-filter] .nav-item, .nav-item[data-filter]').forEach(item => {
+      item.removeEventListener('click', _handleStatusFilterClick);
+      item.addEventListener('click', _handleStatusFilterClick);
+    });
+
+    groupsList.innerHTML = '';
+
+    groups.forEach(group => {
+      const li = document.createElement('li');
+      li.className = 'nav-item';
+      li.dataset.groupId = group.id;
+
+      const linkCount = links.filter(l => l.groupId === group.id).length;
+
+      li.innerHTML = `
+        <div class="nav-item-content">
+          <span class="nav-icon">📁</span>
+          <span class="nav-label">${group.name}</span>
+          <span class="nav-count">${linkCount}</span>
+        </div>
+        <div class="nav-item-actions">
+          <button class="nav-action-btn" data-action="edit-group" data-group-id="${group.id}" title="Редактировать группу">✏️</button>
+          <button class="nav-action-btn" data-action="delete-group" data-group-id="${group.id}" title="Удалить группу">🗑️</button>
+        </div>
+      `;
+
+      li.querySelector('.nav-item-content').addEventListener('click', () => {
+        currentGroupId = group.id;
+        currentFilter = 'all';
+        _syncFilterMenu();
+        _renderSidebar();
+        _renderTable();
+      });
+
+      li.querySelector('[data-action="edit-group"]').addEventListener('click', (e) => {
+        e.stopPropagation();
+        _showGroupModal(group);
+      });
+
+      li.querySelector('[data-action="delete-group"]').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`Удалить группу "${group.name}" и все её ссылки?`)) {
+          Storage.deleteGroup(group.id);
+          if (currentGroupId === group.id) currentGroupId = '';
+          _renderSidebar();
+          _renderTable();
+        }
+      });
+
+      groupsList.appendChild(li);
+    });
+  }
+
+  function _handleStatusFilterClick(e) {
+    const item = e.currentTarget;
+    const filter = item.dataset.filter;
+    if (!filter) return;
+
+    currentFilter = filter;
+    currentGroupId = '';
+    _syncFilterMenu();
+    _renderSidebar();
+    _renderTable();
+  }
+
+  function _syncFilterMenu() {
+    document.querySelectorAll('.nav-item[data-filter]').forEach(item => {
+      item.classList.toggle('active', item.dataset.filter === currentFilter);
+    });
   }
 
   /* ==================== TOOLBAR MENUS ==================== */
