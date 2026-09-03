@@ -302,6 +302,16 @@ const Storage = (() => {
         groupsAdded = data.groups.length;
         linksAdded = data.links.length;
         settingsUpdated = true;
+        
+        // Сохраняем настройки отдельно в yta_settings для совместимости с UI
+        if (imported.settings && imported.settings.youtubeApiKey) {
+          localStorage.setItem('yta_settings', JSON.stringify({ youtubeApiKey: imported.settings.youtubeApiKey }));
+          console.log('Import (replace): saved API key to yta_settings');
+        } else {
+          localStorage.removeItem('yta_settings');
+          console.log('Import (replace): cleared yta_settings');
+        }
+        
         console.log('Import (replace):', linksAdded, 'links,', groupsAdded, 'groups');
       } else {
         // Мерджим — добавляем только отсутствующие

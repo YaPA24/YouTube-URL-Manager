@@ -1406,8 +1406,18 @@ const App = (() => {
             if (r.settingsUpdated) _logImport('Настройки восстановлены.');
             _logImport('Восстановление завершено! Перезагрузка интерфейса...');
             _toast('Восстановлено: ' + r.linksAdded + ' ссылок, ' + r.groupsAdded + ' групп', 'success');
+            
+            // Принудительно обновляем поле API ключа из localStorage
+            const settings = JSON.parse(localStorage.getItem('yta_settings') || '{}');
+            const keyInput = document.getElementById('settings-youtube-api-key');
+            if (keyInput) {
+              keyInput.value = settings.youtubeApiKey || '';
+              _logImport('API ключ обновлен в поле настроек.');
+            }
+            
             _renderSidebar();
             _renderTable();
+            _updateStats();
           } else {
             _logImport(`КРИТИЧЕСКАЯ ОШИБКА: ${r.error}`, 'error');
             _toast('Ошибка: ' + r.error, 'error');
