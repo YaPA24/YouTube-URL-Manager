@@ -30,10 +30,14 @@ const Sidebar = (() => {
   }
 
   function _syncFilterMenu() {
-    document.querySelectorAll('.nav-item[data-filter]').forEach(item => {
-      item.classList.toggle('active', item.dataset.filter === currentFilter);
+    // Синхронизируем элементы боковой панели
+    document.querySelectorAll('.nav-list[data-filter] .nav-item').forEach(item => {
+      const filter = item.dataset.filter;
+      const isActive = filter === currentFilter && !currentGroupId;
+      item.classList.toggle('active', isActive);
     });
 
+    // Синхронизируем выпадающее меню фильтра
     document.querySelectorAll('#menuFilter .tb-dropdown__item[data-filter]').forEach(item => {
       item.classList.toggle('active', item.dataset.filter === currentFilter);
     });
