@@ -8,536 +8,256 @@
 </head>
 <body>
   <div class="app">
-    <!-- Title Bar -->
-    <header class="titlebar">
+    <div class="titlebar">
       <div class="titlebar__left">
-        <span class="titlebar__icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-          </svg>
-        </span>
-        <span class="titlebar__text">YouTube URL Manager</span>
+        <button id="sidebarToggle" class="titlebar-btn" title="Свернуть панель">☰</button>
+        <div class="titlebar__icon">▶</div>
+        <div class="titlebar__text">YouTube URL Manager</div>
+        <span id="version-display"></span>
       </div>
-      <div class="titlebar__right">
-        <button class="titlebar-btn" title="Свернуть">&#9472;</button>
-        <button class="titlebar-btn" title="Развернуть">&#9633;</button>
-        <button class="titlebar-btn" title="Закрыть">&#10005;</button>
-      </div>
-    </header>
+      <div class="titlebar__right"></div>
+    </div>
 
-    <!-- Toolbar -->
     <div class="toolbar">
       <div class="toolbar__left">
         <div class="tb-group">
-          <button class="tb-btn tb-btn--primary" id="menuAddLinkBtn" title="Добавить ссылку">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Добавить</span>
-          </button>
-          <button class="tb-btn" id="menuAddGroupBtn" title="Новая группа">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </button>
+          <button id="menuAddLinkBtn" class="tb-btn tb-btn--primary" title="Добавить ссылку">＋</button>
+          <button id="menuAddGroupBtn" class="tb-btn" title="Добавить группу">📁＋</button>
+          <button id="menuDeleteSelected" class="tb-btn" title="Удалить выбранное">🗑</button>
+          <button id="menuRefreshMeta" class="tb-btn" title="Обновить метаданные">⟳</button>
+          <button id="menuHistory" class="tb-btn" title="История">🕘</button>
+          <button id="menuSettings" class="tb-btn" title="Настройки">⚙</button>
         </div>
-        
+
         <div class="tb-sep"></div>
-        
-        <div class="tb-group">
-          <button class="tb-btn" id="menuDeleteSelected" title="Удалить выбранное">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
-          <button class="tb-btn" id="menuRefreshMeta" title="Обновить метаданные">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </button>
-        </div>
-        
-        <div class="tb-sep"></div>
-        
+
         <div class="tb-dropdown">
-          <button class="tb-btn" id="menuFilterBtn" title="Фильтр по статусу">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-            <span id="filterLabel">Все</span>
-            <svg class="tb-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <div class="tb-dropdown__menu" id="menuFilter">
-            <button class="tb-dropdown__item active" data-filter="all">
-              <span class="status-dot status-dot--all"></span>Все видео
-            </button>
-            <div class="tb-dropdown__sep"></div>
-            <button class="tb-dropdown__item" data-filter="queue">
-              <span class="status-dot status-dot--queue"></span>В очереди
-            </button>
-            <button class="tb-dropdown__item" data-filter="later">
-              <span class="status-dot status-dot--later"></span>Посмотреть позже
-            </button>
-            <button class="tb-dropdown__item" data-filter="watching">
-              <span class="status-dot status-dot--watching"></span>Смотрю
-            </button>
-            <button class="tb-dropdown__item" data-filter="watched">
-              <span class="status-dot status-dot--watched"></span>Просмотрено
-            </button>
-            <button class="tb-dropdown__item" data-filter="archived">
-              <span class="status-dot status-dot--archived"></span>Архив
-            </button>
+          <button id="menuFilterBtn" class="tb-btn">Фильтр <span class="tb-arrow">▾</span></button>
+          <div id="menuFilter" class="tb-dropdown__menu">
+            <button class="tb-dropdown__item active" data-filter="all">Все</button>
+            <button class="tb-dropdown__item" data-filter="queue">В очереди</button>
+            <button class="tb-dropdown__item" data-filter="later">Посмотреть позже</button>
+            <button class="tb-dropdown__item" data-filter="watching">Смотрю</button>
+            <button class="tb-dropdown__item" data-filter="watched">Просмотрено</button>
+            <button class="tb-dropdown__item" data-filter="archived">Архив</button>
           </div>
         </div>
-        
+
         <div class="tb-dropdown">
-          <button class="tb-btn" id="menuSortBtn" title="Сортировка">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <polyline points="19 12 12 19 5 12"></polyline>
-            </svg>
-            <span>Сортировка</span>
-            <svg class="tb-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <div class="tb-dropdown__menu" id="menuSort">
-            <button class="tb-dropdown__item" data-sort="title">По названию</button>
-            <button class="tb-dropdown__item" data-sort="channelTitle">По каналу</button>
-            <button class="tb-dropdown__item" data-sort="durationSeconds">По длительности</button>
-            <button class="tb-dropdown__item" data-sort="publishedAt">По дате</button>
-            <div class="tb-dropdown__sep"></div>
-            <button class="tb-dropdown__item" id="sortAscBtn">По возрастанию &#8593;</button>
-            <button class="tb-dropdown__item" id="sortDescBtn">По убыванию &#8595;</button>
+          <button id="menuSortBtn" class="tb-btn">Сортировка <span class="tb-arrow">▾</span></button>
+          <div id="menuSort" class="tb-dropdown__menu">
+            <div class="tb-dropdown__item">По названию</div>
+            <div class="tb-dropdown__item">По каналу</div>
+            <div class="tb-dropdown__item">По длительности</div>
+            <div class="tb-dropdown__item">По дате</div>
           </div>
         </div>
-        
-        <div class="tb-sep"></div>
-        
+
         <div class="tb-dropdown">
-          <button class="tb-btn" id="menuIoBtn" title="Импорт / Экспорт">
-            <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <svg class="tb-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <div class="tb-dropdown__menu" id="menuIo">
-            <div class="tb-dropdown__header">Экспорт</div>
-            <button class="tb-dropdown__item" data-export="json">JSON</button>
-            <button class="tb-dropdown__item" data-export="csv">CSV</button>
-            <button class="tb-dropdown__item" data-export="markdown">Markdown</button>
-            <button class="tb-dropdown__item" data-export="html">HTML</button>
+          <button id="menuIoBtn" class="tb-btn">Импорт / Экспорт <span class="tb-arrow">▾</span></button>
+          <div id="menuIo" class="tb-dropdown__menu">
+            <button class="tb-dropdown__item" data-export="json">Экспорт JSON</button>
+            <button class="tb-dropdown__item" data-export="csv">Экспорт CSV</button>
+            <button class="tb-dropdown__item" data-export="html">Экспорт HTML</button>
             <div class="tb-dropdown__sep"></div>
-            <div class="tb-dropdown__header">Импорт</div>
-            <button class="tb-dropdown__item" id="menuImportJsonMerge">Добавить из JSON...</button>
-            <button class="tb-dropdown__item" id="menuImportJsonReplace">Восстановить из JSON...</button>
-            <button class="tb-dropdown__item" id="menuImportBookmarks">Из закладок...</button>
+            <button id="menuImportJson" class="tb-dropdown__item">Импорт из файла JSON...</button>
+            <button id="menuImportBookmarks" class="tb-dropdown__item">Импорт из файла закладок...</button>
           </div>
         </div>
-        
-        <div class="tb-sep"></div>
-        
-        <button class="tb-btn" id="menuHistory" title="История изменений">
-          <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-        </button>
-        
-        <button class="tb-btn" id="menuSettings" title="Настройки">
-          <svg class="tb-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <div class="toolbar__right">
+
         <div class="view-switcher">
-          <button class="view-btn active" id="viewRowsBtn" title="Таблица">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-          </button>
-          <button class="view-btn" id="viewMosaicBtn" title="Мозаика">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-          </button>
+          <button id="viewRowsBtn" class="view-btn active" title="Таблица">☰</button>
+          <button id="viewMosaicBtn" class="view-btn" title="Мозаика">▦</button>
         </div>
-        
-        <div class="tb-sep"></div>
-        
+      </div>
+
+      <div class="toolbar__right">
         <div class="toolbar__search">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="searchInput" placeholder="Поиск видео..." autocomplete="off">
-          <button class="search-clear hidden" id="searchClear" title="Очистить поиск">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+          <span class="search-icon">🔍</span>
+          <input id="searchInput" type="text" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear hidden">✕</button>
         </div>
       </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main">
-      <!-- Sidebar -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-          <span>Библиотека</span>
-          <button class="sidebar-toggle" id="sidebarToggle" title="Свернуть панель">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-        </div>
-        <nav class="sidebar-nav">
-          <div class="nav-section">
-            <div class="nav-section-title">Статусы</div>
-            <ul class="nav-list">
-              <li class="nav-item active" data-filter="all">
-                <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                </svg>
-                <span>Все видео</span>
-                <span class="nav-count" id="countAll">0</span>
-              </li>
-              <li class="nav-item" data-filter="queue">
-                <span class="status-dot status-dot--queue"></span>
-                <span>В очереди</span>
-                <span class="nav-count" id="countQueue">0</span>
-              </li>
-              <li class="nav-item" data-filter="later">
-                <span class="status-dot status-dot--later"></span>
-                <span>Посмотреть позже</span>
-                <span class="nav-count" id="countLater">0</span>
-              </li>
-              <li class="nav-item" data-filter="watching">
-                <span class="status-dot status-dot--watching"></span>
-                <span>Смотрю</span>
-                <span class="nav-count" id="countWatching">0</span>
-              </li>
-              <li class="nav-item" data-filter="watched">
-                <span class="status-dot status-dot--watched"></span>
-                <span>Просмотрено</span>
-                <span class="nav-count" id="countWatched">0</span>
-              </li>
-              <li class="nav-item" data-filter="archived">
-                <span class="status-dot status-dot--archived"></span>
-                <span>Архив</span>
-                <span class="nav-count" id="countArchived">0</span>
-              </li>
-            </ul>
-          </div>
-          <div class="nav-section">
-            <div class="nav-section-title">
-              <span>Группы</span>
-              <button class="nav-add-btn" id="sidebarAddGroup" title="Добавить группу">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-              </button>
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">Библиотека</div>
+
+        <ul class="nav-list" data-filter="status">
+          <li class="nav-item active" data-filter="all">
+            <div class="nav-item-content">
+              <span class="nav-label">Все видео</span>
+              <span id="countAll" class="nav-count">0</span>
             </div>
-            <ul class="nav-list" id="sidebarGroups">
-              <!-- Groups will be rendered here -->
-            </ul>
-          </div>
-        </nav>
+          </li>
+          <li class="nav-item" data-filter="queue">
+            <div class="nav-item-content">
+              <span class="nav-label">В очереди</span>
+              <span id="countQueue" class="nav-count">0</span>
+            </div>
+          </li>
+          <li class="nav-item" data-filter="later">
+            <div class="nav-item-content">
+              <span class="nav-label">Посмотреть позже</span>
+              <span id="countLater" class="nav-count">0</span>
+            </div>
+          </li>
+          <li class="nav-item" data-filter="watching">
+            <div class="nav-item-content">
+              <span class="nav-label">Смотрю</span>
+              <span id="countWatching" class="nav-count">0</span>
+            </div>
+          </li>
+          <li class="nav-item" data-filter="watched">
+            <div class="nav-item-content">
+              <span class="nav-label">Просмотрено</span>
+              <span id="countWatched" class="nav-count">0</span>
+            </div>
+          </li>
+          <li class="nav-item" data-filter="archived">
+            <div class="nav-item-content">
+              <span class="nav-label">Архив</span>
+              <span id="countArchived" class="nav-count">0</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="sidebar-header">
+          Группы
+          <button id="sidebarAddGroup" class="tb-btn" title="Добавить группу">＋</button>
+        </div>
+
+        <ul id="sidebarGroups" class="nav-list"></ul>
       </aside>
 
-      <!-- Content Area -->
-      <div class="content">
-        <!-- Breadcrumb -->
-        <div class="breadcrumb" id="breadcrumb">
-          <span class="bc-item">Библиотека</span>
-        </div>
-        
-        <!-- Content Body -->
-        <div class="content-body" id="contentBody">
-          <div class="list-area" id="listArea">
-            <!-- Table View -->
-            <div class="table-wrapper" id="tableWrapper">
-              <div class="table-header" id="tableHeader">
-                <div class="th th--checkbox">
-                  <input type="checkbox" id="selectAll" title="Выбрать все">
-                </div>
-                <div class="th th--thumb"></div>
+      <main class="content">
+        <div class="content-body">
+          <div class="list-area">
+            <div id="tableWrapper" class="table-wrapper">
+              <div class="table-header">
                 <div class="th th--name" data-sort="title">
-                  Название
-                  <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  Название <span class="sort-arrow"></span>
                 </div>
                 <div class="th th--channel" data-sort="channelTitle">
-                  Канал
-                  <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  Канал <span class="sort-arrow"></span>
                 </div>
-                <div class="th th--status">Статус</div>
+                <div class="th th--status">
+                  Статус
+                </div>
                 <div class="th th--duration" data-sort="durationSeconds">
-                  Длительность
-                  <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  Длительность <span class="sort-arrow"></span>
                 </div>
                 <div class="th th--published" data-sort="publishedAt">
-                  Дата
-                  <svg class="sort-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+                  Дата <span class="sort-arrow"></span>
+                </div>
+                <div class="th th--url">
+                  URL
                 </div>
               </div>
-              <div class="table-body" id="tableBody"></div>
-              <div class="table-empty hidden" id="tableEmpty">
-                <div class="empty-state">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                  </svg>
-                  <p>Нет видео для отображения</p>
-                  <button class="btn-link" id="emptyAddLink">Добавить первое видео</button>
-                </div>
+
+              <div id="tableBody" class="table-body"></div>
+              <div id="tableEmpty" class="table-empty hidden">
+                Нет видео для отображения
               </div>
             </div>
-            
-            <!-- Mosaic View -->
-            <div class="mosaic-view hidden" id="mosaicView"></div>
-            <div class="mosaic-empty hidden" id="mosaicEmpty">
-              <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="12" y1="8" x2="12" y2="16"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                <p>Нет видео для отображения</p>
-                <button class="btn-link" id="emptyAddLinkMosaic">Добавить первое видео</button>
-              </div>
+
+            <div id="mosaicView" class="mosaic-view hidden"></div>
+            <div id="mosaicEmpty" class="mosaic-empty hidden">
+              Нет видео для отображения
             </div>
           </div>
-          
-          <!-- Resize Handle -->
-          <div class="resize-handle-v hidden" id="resizeHandleV"></div>
-          
-          <!-- Details Panel -->
-          <div class="details-panel" id="detailsPanel">
-            <div class="details-header">
-              <span>Свойства</span>
-              <button class="details-close" id="detailsClose" title="Закрыть">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
+
+          <div id="resizeHandleV" class="resize-handle-v hidden"></div>
+
+          <aside id="detailsPanel" class="details-panel hidden">
             <div class="details__thumb" id="detailsThumb">
-              <img id="detailsThumbImg" src="" alt="">
-              <a class="thumb-overlay" id="detailsOpenYoutube" title="Открыть на YouTube" href="#" target="_blank">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-                </svg>
-              </a>
+              <img id="detailsThumbImg" alt="">
             </div>
-            <div class="details__fields">
-              <div class="detail-row">
-                <label for="detailName">Название</label>
-                <input type="text" id="detailName" placeholder="Введите название">
-              </div>
-              <div class="detail-row">
-                <label for="detailUrl">URL</label>
-                <div class="input-with-copy">
-                  <input type="text" id="detailUrl" readonly>
-                  <button class="btn-copy" id="copyUrlBtn" title="Копировать URL">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div class="detail-row">
-                <label for="detailChannel">Канал</label>
-                <input type="text" id="detailChannel" readonly>
-              </div>
-              <div class="detail-row detail-row--inline">
-                <div class="detail-row__group">
-                  <label for="detailStatus">Статус</label>
-                  <select id="detailStatus"></select>
-                </div>
-                <div class="detail-row__group">
-                  <label for="detailGroup">Группа</label>
-                  <select id="detailGroup"></select>
-                </div>
-              </div>
-              <div class="detail-row detail-row--inline">
-                <div class="detail-row__group">
-                  <label for="detailDuration">Длительность</label>
-                  <input type="text" id="detailDuration" readonly>
-                </div>
-                <div class="detail-row__group">
-                  <label for="detailPublished">Дата публикации</label>
-                  <input type="text" id="detailPublished" readonly>
-                </div>
-              </div>
-              <div class="detail-row">
-                <label for="detailTags">Метки</label>
-                <input type="text" id="detailTags" placeholder="метка1, метка2, метка3">
-                <span class="detail-hint">Разделяйте метки запятыми</span>
-              </div>
-              <div class="detail-row">
-                <label for="detailNotes">Заметки</label>
-                <textarea id="detailNotes" rows="3" placeholder="Добавьте заметки к этому видео..."></textarea>
-              </div>
-              <div class="detail-actions">
-                <button class="btn btn--secondary" id="detailsHistoryBtn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  История
-                </button>
-                <button class="btn btn--danger" id="detailsDeleteBtn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                  Удалить
-                </button>
+
+            <div class="details__inputs">
+              <label>Название</label>
+              <input id="detailName" type="text">
+              
+              <label>URL</label>
+              <input id="detailUrl" type="text">
+              
+              <label>Канал</label>
+              <input id="detailChannel" type="text">
+              
+              <label>Статус</label>
+              <select id="detailStatus"></select>
+              
+              <label>Группа</label>
+              <select id="detailGroup"></select>
+              
+              <label>Длительность</label>
+              <input id="detailDuration" type="text">
+              
+              <label>Дата публикации</label>
+              <input id="detailPublished" type="text">
+              
+              <label>Метки</label>
+              <input id="detailTags" type="text">
+              <small class="detail-hint">Разделяйте метки запятыми</small>
+              
+              <label>Заметки</label>
+              <textarea id="detailNotes"></textarea>
+              
+              <div class="details-actions">
+                <button id="detailsHistoryBtn" class="modal-btn">История</button>
+                <button id="detailsDeleteBtn" class="modal-btn modal-btn--danger">Удалить</button>
+                <button id="detailsClose" class="modal-btn">Закрыть</button>
+                <button id="copyUrlBtn" class="modal-btn">Копировать URL</button>
               </div>
             </div>
-          </div>
+          </aside>
         </div>
-      </div>
+
+        <div class="statusbar">
+          <span id="statusText">Готово</span>
+        </div>
+      </main>
     </div>
 
-    <!-- Status Bar -->
-    <footer class="statusbar">
-      <span id="statusText">Готово</span>
-      <span class="statusbar-divider"></span>
-      <span id="statusCount">0 видео</span>
-      <span class="statusbar-spacer"></span>
-      <span id="statusSelection"></span>
-    </footer>
-  </div>
-
-  <!-- Context Menu -->
-  <div class="ctx-menu" id="ctxMenu">
-    <div class="ctx-section ctx-link-section">
-      <button class="ctx-menu__item" data-action="open">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
-        Открыть на YouTube
-      </button>
-      <button class="ctx-menu__item" data-action="refresh">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="23 4 23 10 17 10"></polyline>
-          <polyline points="1 20 1 14 7 14"></polyline>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-        </svg>
-        Обновить метаданные
-      </button>
-      <div class="ctx-menu__sep"></div>
-      <button class="ctx-menu__item" data-action="copy-url">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-        </svg>
-        Копировать URL
-      </button>
-      <button class="ctx-menu__item" data-action="copy-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        Копировать название
-      </button>
-      <div class="ctx-menu__sep"></div>
-      <div class="ctx-menu__sub-wrap">
-        <button class="ctx-menu__item ctx-menu__item--has-sub" id="ctxMoveToFolder">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
-          Переместить в группу
-          <svg class="ctx-sub-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-        <div class="ctx-menu__sub" id="ctxMoveSubmenu"></div>
+    <div id="ctxMenu" class="ctx-menu">
+      <div class="ctx-link-section">
+        <button class="ctx-menu__item" data-action="open">Открыть на YouTube</button>
+        <button class="ctx-menu__item" data-action="refresh">Обновить метаданные</button>
+        <button class="ctx-menu__item" data-action="copy-url">Копировать URL</button>
+        <button class="ctx-menu__item" data-action="copy-title">Копировать название</button>
+        <div class="ctx-menu__sub-wrap">
+          <button class="ctx-menu__item ctx-menu__item--has-sub" id="ctxMoveToFolder">
+            Переместить в группу <span>▸</span>
+          </button>
+          <div id="ctxMoveSubmenu" class="ctx-menu__sub"></div>
+        </div>
+        <button class="ctx-menu__item" data-action="history">История изменений</button>
+        <button class="ctx-menu__item ctx-menu__item--danger" data-action="delete">Удалить</button>
       </div>
-      <button class="ctx-menu__item" data-action="history">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        История изменений
-      </button>
-      <div class="ctx-menu__sep"></div>
-      <button class="ctx-menu__item ctx-menu__item--danger" data-action="delete">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        Удалить
-      </button>
-    </div>
-    <div class="ctx-section ctx-folder-section">
-      <button class="ctx-menu__item" data-action="rename-folder">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
-        Переименовать
-      </button>
-      <div class="ctx-menu__sep"></div>
-      <button class="ctx-menu__item ctx-menu__item--danger" data-action="delete-folder">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
-        Удалить группу
-      </button>
+
+      <div class="ctx-folder-section hidden">
+        <button class="ctx-menu__item" data-action="rename-folder">Переименовать</button>
+        <button class="ctx-menu__item ctx-menu__item--danger" data-action="delete-folder">Удалить группу</button>
+      </div>
     </div>
   </div>
 
-  <!-- Modals Container -->
   <div id="modals"></div>
-  
-  <!-- Toast Container -->
-  <div class="toast-container" id="toastContainer"></div>
-  
-  <!-- Hidden File Input -->
-  <input type="file" id="fileInput" accept=".json,.html,.htm" class="hidden">
-  
-  <script src="js/storage.js"></script>
+  <input type="file" id="fileInput" class="hidden">
+
+  <!-- Скрипты загружаются в порядке зависимостей -->
   <script src="js/youtube.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/services/logger.js"></script>
+  <script src="js/services/export.js"></script>
+  <script src="js/services/import.js"></script>
+  <script src="js/ui/sidebar.js"></script>
+  <script src="js/ui/table.js"></script>
+  <script src="js/ui/mosaic.js"></script>
+  <script src="js/ui/details.js"></script>
+  <script src="js/ui/modal.js"></script>
+  <script src="js/ui/context-menu.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

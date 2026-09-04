@@ -1,8 +1,7 @@
 /* ============================================================
- *  storage.js — Модуль работы с localStorage
- *  YouTube URL Manager
- * ============================================================ */
-
+storage.js — Модуль работы с localStorage
+YouTube URL Manager
+============================================================ */
 const Storage = (() => {
   const STORAGE_KEY = 'yt_url_manager';
 
@@ -15,8 +14,6 @@ const Storage = (() => {
     links: []
   };
 
-  /* ---------- helpers ---------- */
-
   function _uuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
       const r = (Math.random() * 16) | 0;
@@ -28,21 +25,25 @@ const Storage = (() => {
     return new Date().toISOString();
   }
 
-  /* ---------- core CRUD ---------- */
-
   function _load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
       const data = JSON.parse(raw);
-      // миграция / защита
       if (!data.version) data.version = 1;
       if (!data.settings) data.settings = { youtubeApiKey: '' };
       if (!Array.isArray(data.groups)) data.groups = [];
       if (!Array.isArray(data.links)) data.links = [];
+      
+      data.groups.forEach(group => {
+        if (group.title === undefined && group.name !== undefined) {
+          group.title = group.name;
+        }
+      });
+      
       return data;
     } catch (e) {
-      console.error('Storage load error:', e);
+      console.error('Storage: Error loading data', e);
       return JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
   }
@@ -53,11 +54,9 @@ const Storage = (() => {
       return true;
     } catch (e) {
       console.error('Storage save error:', e);
-      return false;
+      throw e;
     }
   }
-
-  /* ---------- Settings ---------- */
 
   function getSettings() {
     return _load().settings;
@@ -79,8 +78,6 @@ const Storage = (() => {
     return _save(data);
   }
 
-  /* ---------- Groups ---------- */
-
   function getGroups() {
     return _load().groups;
   }
@@ -95,7 +92,6 @@ const Storage = (() => {
       id: _uuid(),
       title: title.trim(),
       parentId: parentId || '',
-      type: 'folder',
       createdAt: _now(),
       updatedAt: _now()
     };
@@ -115,14 +111,11 @@ const Storage = (() => {
 
   function deleteGroup(id) {
     const data = _load();
-    // Удаляем группу
     data.groups = data.groups.filter(g => g.id !== id);
-    // Удаляем дочерние группы рекурсивно
     const childIds = _getAllDescendantGroupIds(id, data.groups);
     childIds.forEach(cid => {
       data.groups = data.groups.filter(g => g.id !== cid);
     });
-    // Сбрасываем groupId у ссылок
     const affectedIds = [id, ...childIds];
     data.links.forEach(link => {
       if (affectedIds.includes(link.groupId)) {
@@ -143,19 +136,15 @@ const Storage = (() => {
     return ids;
   }
 
-  /** Построить дерево групп */
   function buildGroupTree(groups, parentId) {
     if (parentId === undefined) parentId = '';
-    const children = groups
+    return groups
       .filter(g => g.parentId === parentId)
       .map(g => ({
         ...g,
         children: buildGroupTree(groups, g.id)
       }));
-    return children;
   }
-
-  /* ---------- Links ---------- */
 
   function getLinks() {
     return _load().links;
@@ -199,8 +188,6 @@ const Storage = (() => {
     const data = _load();
     const link = data.links.find(l => l.id === id);
     if (!link) return null;
-
-    // Сохраняем историю изменений
     const changedFields = {};
     const trackedFields = ['title', 'status', 'groupId', 'notes', 'tags', 'channelTitle', 'duration', 'thumbnailUrl'];
     trackedFields.forEach(field => {
@@ -208,7 +195,6 @@ const Storage = (() => {
         changedFields[field] = { old: link[field], new: updates[field] };
       }
     });
-
     if (Object.keys(changedFields).length > 0) {
       if (!Array.isArray(link.history)) link.history = [];
       link.history.push({
@@ -216,7 +202,6 @@ const Storage = (() => {
         changes: changedFields
       });
     }
-
     Object.assign(link, updates, { updatedAt: _now() });
     _save(data);
     return link;
@@ -233,13 +218,9 @@ const Storage = (() => {
     const data = _load();
     const link = data.links.find(l => l.id === id);
     if (!link) return null;
-
-    // Не переписываем ручное название
     if (link.manualTitle && meta.title) {
       delete meta.title;
     }
-
-    // Логируем обновление метаданных
     const changedFields = {};
     const metaFields = ['title', 'channelTitle', 'duration', 'durationSeconds', 'publishedAt', 'thumbnailUrl'];
     metaFields.forEach(field => {
@@ -247,7 +228,6 @@ const Storage = (() => {
         changedFields[field] = { old: link[field], new: meta[field] };
       }
     });
-
     if (Object.keys(changedFields).length > 0) {
       if (!Array.isArray(link.history)) link.history = [];
       link.history.push({
@@ -256,7 +236,6 @@ const Storage = (() => {
         fetchUpdate: true
       });
     }
-
     Object.assign(link, meta, {
       updatedAt: _now(),
       fetchedAt: _now(),
@@ -267,117 +246,123 @@ const Storage = (() => {
     return link;
   }
 
-  /* ---------- Import / Export ---------- */
-
   function exportAll() {
     return _load();
   }
 
   function importJSON(jsonString, replaceAll = false) {
-    try {
-      // jsonString может быть строкой или уже объектом
-      const imported = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
-      console.log('Import: parsed data', imported);
-      
-      if (!imported.version && !imported.links && !imported.groups) {
-        throw new Error('Invalid format');
-      }
-      
-      let data;
-      let groupsAdded = 0;
-      let linksAdded = 0;
-      let settingsUpdated = false;
-      
-      if (replaceAll) {
-        // Полная замена — восстановление из бэкапа
-        data = {
-          version: imported.version || 1,
-          settings: imported.settings || { youtubeApiKey: '' },
-          groups: Array.isArray(imported.groups) ? imported.groups : [],
-          links: Array.isArray(imported.links) ? imported.links.map(l => {
-            if (!Array.isArray(l.history)) l.history = [];
-            return l;
-          }) : []
-        };
-        groupsAdded = data.groups.length;
-        linksAdded = data.links.length;
-        settingsUpdated = true;
-        
-        // Сохраняем настройки отдельно в yta_settings для совместимости с UI
-        if (imported.settings && imported.settings.youtubeApiKey) {
-          localStorage.setItem('yta_settings', JSON.stringify({ youtubeApiKey: imported.settings.youtubeApiKey }));
-          console.log('Import (replace): saved API key to yta_settings');
-        } else {
-          localStorage.removeItem('yta_settings');
-          console.log('Import (replace): cleared yta_settings');
-        }
-        
-        console.log('Import (replace):', linksAdded, 'links,', groupsAdded, 'groups');
-      } else {
-        // Мерджим — добавляем только отсутствующие
-        data = _load();
-        if (imported.settings) {
-          Object.assign(data.settings, imported.settings);
-          settingsUpdated = true;
-        }
-        if (Array.isArray(imported.groups)) {
-          const existingIds = new Set(data.groups.map(g => g.id));
-          imported.groups.forEach(g => {
-            if (!existingIds.has(g.id)) {
-              data.groups.push(g);
-              groupsAdded++;
-            }
-          });
-        }
-        if (Array.isArray(imported.links)) {
-          const existingIds = new Set(data.links.map(l => l.id));
-          imported.links.forEach(l => {
-            if (!existingIds.has(l.id)) {
-              if (!Array.isArray(l.history)) l.history = [];
-              data.links.push(l);
-              linksAdded++;
-            }
-          });
-        }
-        console.log('Import (merge): +', linksAdded, 'links, +', groupsAdded, 'groups');
-      }
-      
-      const saved = _save(data);
-      console.log('Import: save result', saved, 'Total links:', data.links.length);
-      
-      return { success: true, groupsAdded, linksAdded, replaced: replaceAll, settingsUpdated };
-    } catch (e) {
-      console.error('Import error:', e);
-      return { success: false, error: e.message };
+    const imported = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+    if (!imported || (!imported.version && !Array.isArray(imported.links) && !Array.isArray(imported.groups))) {
+      throw new Error('Invalid format');
     }
+    let data;
+    let groupsAdded = 0;
+    let linksAdded = 0;
+    let settingsUpdated = false;
+    if (replaceAll) {
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      if (imported.version) data.version = imported.version;
+      if (imported.settings) data.settings = imported.settings;
+      if (Array.isArray(imported.groups)) {
+        data.groups = imported.groups;
+        groupsAdded = imported.groups.length;
+      }
+      if (Array.isArray(imported.links)) {
+        data.links = imported.links.map(l => {
+          if (!l.id) l.id = _uuid();
+          if (!Array.isArray(l.history)) l.history = [];
+          return l;
+        });
+        linksAdded = data.links.length;
+      }
+    } else {
+      data = _load();
+      if (imported.settings) {
+        Object.assign(data.settings, imported.settings);
+        settingsUpdated = true;
+      }
+      if (Array.isArray(imported.groups)) {
+        const existingIds = new Set(data.groups.map(g => g.id).filter(Boolean));
+        imported.groups.forEach(g => {
+          if (!g || !g.id) return;
+          if (!existingIds.has(g.id)) {
+            if (g.title === undefined && g.name !== undefined) {
+              g.title = g.name;
+            }
+            data.groups.push(g);
+            existingIds.add(g.id);
+            groupsAdded++;
+          }
+        });
+      }
+      if (Array.isArray(imported.links)) {
+        const existingIds = new Set(data.links.map(l => l.id).filter(Boolean));
+        const existingVideoIds = new Set(data.links.map(l => l.youtubeId).filter(Boolean));
+        imported.links.forEach(l => {
+          if (!l || typeof l !== 'object') return;
+          if (!l.id) {
+            l.id = _uuid();
+          }
+          if (!Array.isArray(l.history)) {
+            l.history = [];
+          }
+          const duplicateById = existingIds.has(l.id);
+          const duplicateByVideoId = l.youtubeId && existingVideoIds.has(l.youtubeId);
+          if (!duplicateById && !duplicateByVideoId) {
+            data.links.push(l);
+            existingIds.add(l.id);
+            if (l.youtubeId) {
+              existingVideoIds.add(l.youtubeId);
+            }
+            linksAdded++;
+          }
+        });
+      }
+    }
+    _save(data);
+    return {
+      success: true,
+      groupsAdded,
+      linksAdded,
+      replaced: replaceAll,
+      settingsUpdated
+    };
   }
 
-  function importBookmarks(htmlString) {
+  function importBookmarks(htmlString, createNewGroup = false) {
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlString, 'text/html');
       const anchors = doc.querySelectorAll('a[href]');
       const results = [];
-
       anchors.forEach(a => {
         const url = a.getAttribute('href');
         const ytId = YouTube.extractVideoId(url);
         if (ytId) {
           results.push({
-            url: url,
+            url,
             youtubeId: ytId,
             title: a.textContent.trim() || ''
           });
         }
       });
-
-      // Добавляем найденные
       let added = 0;
       const data = _load();
-      const existingUrls = new Set(data.links.map(l => l.youtubeId));
-
+      const existingVideoIds = new Set(data.links.map(l => l.youtubeId).filter(Boolean));
+      let newGroupId = '';
+      if (createNewGroup) {
+        const groupName = `Закладки от ${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+        newGroupId = _uuid();
+        data.groups.push({
+          id: newGroupId,
+          title: groupName,
+          parentId: '',
+          createdAt: _now(),
+          updatedAt: _now()
+        });
+      }
       results.forEach(r => {
-        if (!existingUrls.has(r.youtubeId)) {
+        if (!existingVideoIds.has(r.youtubeId)) {
           data.links.push({
             id: _uuid(),
             url: r.url,
@@ -389,7 +374,7 @@ const Storage = (() => {
             publishedAt: '',
             thumbnailUrl: '',
             status: 'queue',
-            groupId: '',
+            groupId: newGroupId,
             tags: [],
             notes: '',
             manualTitle: false,
@@ -400,15 +385,25 @@ const Storage = (() => {
             fetchError: '',
             history: []
           });
-          existingUrls.add(r.youtubeId);
+          existingVideoIds.add(r.youtubeId);
           added++;
         }
       });
-
       _save(data);
-      return { success: true, found: results.length, added: added };
+      const groupName = createNewGroup
+        ? (data.groups.find(g => g.id === newGroupId) || {}).title
+        : undefined;
+      return {
+        success: true,
+        found: results.length,
+        added,
+        groupName
+      };
     } catch (e) {
-      return { success: false, error: e.message };
+      return {
+        success: false,
+        error: e.message
+      };
     }
   }
 
@@ -416,7 +411,6 @@ const Storage = (() => {
     _save(JSON.parse(JSON.stringify(DEFAULT_DATA)));
   }
 
-  /* ---------- Public API ---------- */
   return {
     getSettings,
     saveSettings,
